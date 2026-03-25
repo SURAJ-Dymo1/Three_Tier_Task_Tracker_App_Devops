@@ -1,3 +1,5 @@
+kubectl run debug --rm -it --image=busybox -- sh
+
 In production you should **never hard-code secrets** like this in code:
 
 ```go

@@ -6,7 +6,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -20,7 +22,6 @@ type Task struct {
 var collection *mongo.Collection
 
 func main() {
-	// 1. Setup MongoDB Connection
 	mongoURI := os.Getenv("MONGO_URI")
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -33,28 +34,25 @@ func main() {
 	if err != nil {
 		panic("MongoDB connection failed")
 	}
+
 	collection = client.Database("mydatabase").Collection("sample_collection")
 
-	// 2. Initialize Gin Router
 	r := gin.Default()
-	// Add this inside main() before r.POST...
-	r.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-		c.Next()
-	})
-	// 3. Define Routes (CRUD)
+
+	// CORS Middleware
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type"},
+		AllowCredentials: false,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	// Routes
 	r.POST("/tasks", createTask)
 	r.GET("/tasks", getTasks)
 	r.DELETE("/tasks/:title", deleteTask)
 
-	// 4. Start Server on Port 8080
-	// In K8s, this allows the Service to find your app
 	r.Run(":8080")
 }
 
