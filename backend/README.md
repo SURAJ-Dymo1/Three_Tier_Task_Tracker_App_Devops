@@ -261,7 +261,7 @@ my-backend
 
 ```
 
-docker run -d --name my-backend --network my-net -p 8080:8080 my-backend
+docker run -d --name my-backend --network my-net -p 8080:8080 -e MONGO_URI="mongodb://admin:admin123@my-mongo:27017/mydatabase?authSource=admin" my-backend
 
 docker network connect my-net my-backend
  docker inspect network my-net

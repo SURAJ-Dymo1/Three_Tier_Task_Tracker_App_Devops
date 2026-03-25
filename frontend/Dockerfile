@@ -8,6 +8,10 @@ RUN npm install
 
 # Copy the rest of the code and build
 COPY . .
+
+ARG Backend_API_URL
+ENV Backend_API_URL=$Backend_API_URL
+
 RUN npm run build
 
 # Stage 2: Serve with Nginx
@@ -23,5 +27,11 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 
 
+
+# ```bash
+# docker build \
+# --build-arg VITE_Backend_API_URL=http://localhost:8080 \
+# -t my-frontend .
+# ```
 #  docker build -t my-frontend .
 # docker run -d --name my-frontend --network my-net -p 82:80 my-frontend

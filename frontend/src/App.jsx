@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 const App = () => {
   const [tasks, setTasks] = useState([]);
   const [newTitle, setNewTitle] = useState('');
-  const API_URL = 'http://localhost:8080/tasks';
+  const API_URL =`${import.meta.env.VITE_Backend_API_URL}/tasks`;
 
   // --- READ ---
   const fetchTasks = async () => {

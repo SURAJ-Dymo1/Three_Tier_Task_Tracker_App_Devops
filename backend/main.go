@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,8 +21,10 @@ var collection *mongo.Collection
 
 func main() {
 	// 1. Setup MongoDB Connection
+	mongoURI := os.Getenv("MONGO_URI")
+
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://admin:admin123@my-mongo:27017/mydatabase?authSource=admin"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		panic(err)
 	}
