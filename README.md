@@ -1,5 +1,145 @@
 kubectl run debug --rm -it --image=busybox -- sh
 
+
+To test your backend API **from inside a pod** in **Kubernetes**, you should exec into a pod that has network tools (or create a temporary debug pod).
+
+Your current pods (React, backend) usually **don’t contain curl/wget**, so the easiest way is using a **temporary debug pod**.
+
+---
+
+# 1️⃣ Start a Debug Pod
+
+Run:
+
+```bash
+kubectl run debug --rm -it --image=busybox -- sh
+```
+
+This opens a shell inside a temporary pod.
+
+---
+
+# 2️⃣ Call Your Backend Service
+
+Inside the pod run:
+
+```bash
+wget -qO- http://backend-service:8080/tasks
+```
+
+or
+
+```bash
+wget http://backend-service:8080/tasks
+```
+
+If backend is working you should see JSON like:
+
+```json
+[
+  {
+    "title": "task1",
+    "status": "Pending"
+  }
+]
+```
+
+---
+
+# 3️⃣ Test POST API
+
+Busybox does not support POST easily, so instead use **curl image**.
+
+Run:
+
+```bash
+kubectl run curlpod --rm -it --image=curlimages/curl -- sh
+```
+
+Then test:
+
+### GET
+
+```bash
+curl http://backend-service:8080/tasks
+```
+
+### POST
+
+```bash
+curl -X POST http://backend-service:8080/tasks \
+-H "Content-Type: application/json" \
+-d '{"title":"Test Task","status":"Pending"}'
+```
+
+### DELETE
+
+```bash
+curl -X DELETE http://backend-service:8080/tasks/Test\ Task
+```
+
+---
+
+# 4️⃣ If You Want to Exec Into Existing Pod
+
+First list pods:
+
+```bash
+kubectl get pods
+```
+
+Then exec:
+
+```bash
+kubectl exec -it <pod-name> -- sh
+```
+
+Example:
+
+```bash
+kubectl exec -it backend-7c9f9b7d9c-abc12 -- sh
+```
+
+Then try:
+
+```bash
+wget http://localhost:8080/tasks
+```
+
+---
+
+# 5️⃣ What You Are Verifying
+
+This confirms whether communication works inside the cluster:
+
+```
+frontend pod
+      ↓
+backend-service
+      ↓
+backend pod
+      ↓
+mongodb-service
+```
+
+If this works but browser fails → **CORS or frontend URL issue**.
+
+---
+
+✅ If you want, I can also show you **one command to test the full path (browser → frontend → backend → MongoDB)** which makes debugging Kubernetes apps much easier.
+
+
+
+
+
+
+
+
+
+
+
+
+
 In production you should **never hard-code secrets** like this in code:
 
 ```go
