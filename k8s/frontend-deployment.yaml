@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: surajmane121045/task-frontend:1.1
+        image: surajmane121045/task-frontend:1.2
         ports:
         - containerPort: 80
