@@ -30,8 +30,8 @@ CMD ["nginx", "-g", "daemon off;"]
 
 # ```bash
 # docker build \
-# --build-arg VITE_Backend_API_URL=http://localhost:8080 \
-# -t my-frontend .
+# --build-arg VITE_Backend_API_URL=http://backend-service:8080 \
+# -t surajmane121045/task-frontend .
 # ```
 #  docker build -t my-frontend .
 # docker run -d --name my-frontend --network my-net -p 82:80 my-frontend

@@ -588,3 +588,635 @@ When deploying React apps in **Kubernetes**, the most scalable pattern is:
 ---
 
 ✅ If you want, I can also show you a **full working example of your 3-tier project (React + Go + Mongo) running in Docker Compose and Kubernetes** with environment variables and networking done correctly.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Great 👍 Since you're building a **3-tier DevOps project (React + Go + MongoDB)**, I'll show you a **production-style architecture** used in real companies with **Docker**, **Docker Compose**, and later deployable to **Kubernetes**.
+
+This will make your project **very strong for DevOps / MLOps portfolios**.
+
+---
+
+# 🏗️ Final Architecture
+
+```text
+Browser
+   │
+   ▼
+React Frontend (Nginx)
+   │
+   ▼
+Go Backend API (Gin)
+   │
+   ▼
+MongoDB Database
+```
+
+Inside Docker network:
+
+```text
+frontend  →  backend  →  mongodb
+```
+
+---
+
+# 📁 Project Structure (Recommended)
+
+```
+three-tier-task-tracker
+│
+├── frontend
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   └── React App
+│
+├── backend
+│   ├── Dockerfile
+│   └── main.go
+│
+├── database
+│
+├── docker-compose.yml
+│
+└── k8s
+    ├── frontend-deployment.yaml
+    ├── backend-deployment.yaml
+    ├── mongodb-deployment.yaml
+```
+
+---
+
+# 🐳 1. Backend Dockerfile (Go)
+
+```dockerfile
+# Build stage
+FROM golang:1.22 AS builder
+
+WORKDIR /app
+COPY . .
+
+RUN go mod tidy
+RUN go build -o main .
+
+# Run stage
+FROM alpine:latest
+
+WORKDIR /app
+COPY --from=builder /app/main .
+
+EXPOSE 8080
+
+CMD ["./main"]
+```
+
+---
+
+# 🐳 2. Frontend Dockerfile (React)
+
+```dockerfile
+# Build React
+FROM node:20 AS builder
+
+WORKDIR /app
+COPY . .
+RUN npm install
+RUN npm run build
+
+# Serve with nginx
+FROM nginx:alpine
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+```
+
+---
+
+# 🌐 3. Nginx Reverse Proxy
+
+`frontend/nginx.conf`
+
+```nginx
+events {}
+
+http {
+
+  server {
+    listen 80;
+
+    location / {
+      root /usr/share/nginx/html;
+      index index.html;
+      try_files $uri /index.html;
+    }
+
+    location /api/ {
+      proxy_pass http://backend:8080/;
+    }
+
+  }
+}
+```
+
+Now React calls:
+
+```javascript
+fetch("/api/tasks")
+```
+
+Nginx forwards request to backend.
+
+---
+
+# 🐳 4. Docker Compose (Best for DevOps Projects)
+
+`docker-compose.yml`
+
+```yaml
+version: "3.9"
+
+services:
+
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    ports:
+      - "27017:27017"
+
+  backend:
+    build: ./backend
+    container_name: backend
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_URI: mongodb://admin:admin123@mongodb:27017/mydatabase?authSource=admin
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+```
+
+Run everything:
+
+```bash
+docker compose up -d
+```
+
+Open:
+
+```
+http://localhost:3000
+```
+
+---
+
+# 🔐 Backend Code (Use ENV Variable)
+
+Instead of hardcoding Mongo URL:
+
+```go
+mongoURI := os.Getenv("MONGO_URI")
+client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
+```
+
+---
+
+# ☸️ Kubernetes Version
+
+Later convert to **Kubernetes**.
+
+Services communicate like this:
+
+```text
+frontend → backend-service → mongodb-service
+```
+
+Example backend service URL:
+
+```
+mongodb://admin:admin123@mongodb-service:27017
+```
+
+---
+
+# 🔐 Kubernetes Secret
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongodb-secret
+type: Opaque
+stringData:
+  MONGO_URI: mongodb://admin:admin123@mongodb-service:27017/mydatabase?authSource=admin
+```
+
+---
+
+# 🚀 DevOps Tools You Can Add (Highly Recommended)
+
+To make this a **real DevOps portfolio project**:
+
+| Tool           | Purpose                     |
+| -------------- | --------------------------- |
+| Docker         | Containerization            |
+| Docker Compose | Local multi-container setup |
+| Kubernetes     | Container orchestration     |
+| Helm           | Kubernetes package manager  |
+| GitHub Actions | CI/CD pipeline              |
+| Prometheus     | Monitoring                  |
+| Grafana        | Visualization               |
+
+---
+
+# 💼 What This Project Shows in Resume
+
+You can write:
+
+```
+Built a 3-tier cloud-native task tracking system using
+React, Go (Gin), and MongoDB.
+
+• Containerized applications using Docker
+• Implemented multi-container orchestration using Docker Compose
+• Created Kubernetes manifests for scalable deployment
+• Implemented Nginx reverse proxy for API routing
+• Managed secrets using Kubernetes Secrets
+• Designed microservice-based architecture
+```
+
+This is **very attractive for DevOps / MLOps jobs**.
+
+---
+
+# ⭐ If you want, I can also show you the **NEXT LEVEL version of this project**:
+
+I can upgrade it to include:
+
+✅ CI/CD pipeline
+✅ Kubernetes autoscaling
+✅ Monitoring dashboard
+✅ Production-grade architecture
+
+This becomes a **very powerful DevOps portfolio project**.
+
+
+
+
+
+
+
+
+Good — let’s make it **simple and practical for your 2-node Kubernetes cluster** (1 master + 1 worker in **Kubernetes**).
+
+You have 3 services:
+
+1️⃣ React frontend
+2️⃣ Go backend
+3️⃣ MongoDB database
+
+All will communicate using **Kubernetes Services (DNS names)**.
+
+---
+
+# 1️⃣ Important Changes Before Building Images
+
+## Backend → MongoDB
+
+Inside Kubernetes, containers **do NOT use container names**.
+
+They use **Service names**.
+
+So change your backend connection string from:
+
+```text
+mongodb://admin:admin123@my-mongo:27017/mydatabase?authSource=admin
+```
+
+to
+
+```text
+mongodb://admin:admin123@mongodb-service:27017/mydatabase?authSource=admin
+```
+
+Because Kubernetes DNS will resolve:
+
+```text
+mongodb-service → MongoDB Pod
+```
+
+---
+
+## React → Backend
+
+Change your `.env` before building React image.
+
+❌ Current
+
+```env
+VITE_BACKEND_API_URL=http://localhost:8080
+```
+
+✅ Change to
+
+```env
+VITE_BACKEND_API_URL=http://backend-service:8080
+```
+
+Because frontend will call:
+
+```text
+backend-service → backend pod
+```
+
+Then **build new React Docker image**.
+
+---
+
+# 2️⃣ MongoDB Deployment
+
+`mongodb-deployment.yaml`
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: "admin"
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: "admin123"
+```
+
+---
+
+# MongoDB Service
+
+`mongodb-service.yaml`
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+spec:
+  selector:
+    app: mongodb
+  ports:
+  - port: 27017
+    targetPort: 27017
+  type: ClusterIP
+```
+
+---
+
+# 3️⃣ Backend Deployment
+
+`backend-deployment.yaml`
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: yourdockerhub/backend:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MONGO_URI
+          value: mongodb://admin:admin123@mongodb-service:27017/mydatabase?authSource=admin
+```
+
+---
+
+# Backend Service
+
+`backend-service.yaml`
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: ClusterIP
+```
+
+---
+
+# 4️⃣ Frontend Deployment
+
+`frontend-deployment.yaml`
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: yourdockerhub/frontend:latest
+        ports:
+        - containerPort: 80
+```
+
+---
+
+# Frontend Service
+
+To access from browser we use **NodePort**.
+
+`frontend-service.yaml`
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30007
+  type: NodePort
+```
+
+---
+
+# 5️⃣ Apply Everything
+
+Run in your master node:
+
+```bash
+kubectl apply -f mongodb-deployment.yaml
+kubectl apply -f mongodb-service.yaml
+
+kubectl apply -f backend-deployment.yaml
+kubectl apply -f backend-service.yaml
+
+kubectl apply -f frontend-deployment.yaml
+kubectl apply -f frontend-service.yaml
+```
+
+---
+
+# 6️⃣ Check Pods
+
+```bash
+kubectl get pods
+```
+
+Example:
+
+```text
+mongodb-xxxx
+backend-xxxx
+frontend-xxxx
+```
+
+---
+
+# 7️⃣ Access Application
+
+Find worker node IP:
+
+```bash
+kubectl get nodes -o wide
+```
+
+Example:
+
+```
+192.168.64.10
+```
+
+Open browser:
+
+```text
+http://192.168.64.10:30007
+```
+
+Your **React app will load**.
+
+---
+
+# 8️⃣ Final Communication Flow
+
+Inside **Kubernetes** cluster:
+
+```
+React frontend
+      ↓
+backend-service:8080
+      ↓
+mongodb-service:27017
+```
+
+---
+
+# 9️⃣ Summary of What You Must Change
+
+### React
+
+```
+VITE_BACKEND_API_URL=http://backend-service:8080
+```
+
+Then rebuild Docker image.
+
+---
+
+### Backend
+
+Use env variable:
+
+```go
+mongoURI := os.Getenv("MONGO_URI")
+```
+
+Kubernetes will pass:
+
+```
+mongodb://admin:admin123@mongodb-service:27017/mydatabase?authSource=admin
+```
+
+---
+
+✅ This setup will **work perfectly in your 2-node Kubernetes cluster**.
+
+---
+
+If you want, I can also show you **3 very common mistakes people make in Kubernetes 3-tier apps** (which cause backend ↔ database connection failures). This will save you hours of debugging.
+
+
